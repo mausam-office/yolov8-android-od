@@ -55,7 +55,9 @@ class MainActivity : AppCompatActivity() {
 
         objectDetectionButton.setOnClickListener {
             try {
-                performObjectDetection(ortSession)
+                Coroutines.io {
+                    performObjectDetection(ortSession)
+                }
                 Toast.makeText(baseContext, "ObjectDetection performed!", Toast.LENGTH_SHORT)
                     .show()
             } catch (e: Exception) {
@@ -104,7 +106,12 @@ class MainActivity : AppCompatActivity() {
             })
         }
 
-        outputImage.setImageBitmap(mutableBitmap)
+        Coroutines.main {
+            outputImage.setImageBitmap(mutableBitmap)
+        }
+
+        //Log
+        Log.d("PerformanceOut: ","ElapsedTime: $elapsedTime,  FPS: $fps")
 
         // draw
         canvas.drawText("ElapsedTime: $elapsedTime,  FPS: $fps", 0.0f, 50.0f, paint.apply {
@@ -133,22 +140,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun performObjectDetection(ortSession: OrtSession) {
-        var objDetector = ObjectDetector()
+        val objDetector = ObjectDetector()
         val startTime = System.currentTimeMillis()
-        var imagestream = readInputImage()
-        var img_bitmap = BitmapFactory.decodeStream(imagestream)
-        inputImage.setImageBitmap(
-//            BitmapFactory.decodeStream(imagestream)
-                    img_bitmap
-        );
-        imagestream.reset()
-        var result = objDetector.detect(imagestream, ortEnv, ortSession, img_bitmap)
+        val imageStream = readInputImage()
+        val imgBitmap = BitmapFactory.decodeStream(imageStream)
+
+        Coroutines.main {
+            inputImage.setImageBitmap(imgBitmap)
+        }
+
+        imageStream.reset()
+        val result = objDetector.detect(imageStream, ortEnv, ortSession, imgBitmap)
         val endTime = System.currentTimeMillis()
 
-        // Calculate elapsed time in milliseconds
         val elapsedTime = endTime - startTime
-
-        // Calculate Frames Per Second (FPS)
         val fps = 1000.0 / elapsedTime
 
         updateUI(result, elapsedTime, fps)
