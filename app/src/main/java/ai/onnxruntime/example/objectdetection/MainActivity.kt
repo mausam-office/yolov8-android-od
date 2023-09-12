@@ -56,7 +56,18 @@ class MainActivity : AppCompatActivity() {
         objectDetectionButton.setOnClickListener {
             try {
                 Coroutines.io {
-                    performObjectDetection(ortSession)
+                    val numberOfDetections = 50
+                    val startTime = System.currentTimeMillis()
+
+                    for (i in 0 until numberOfDetections) {
+                        performObjectDetection(ortSession, i)
+                    }
+
+                    val endTime = System.currentTimeMillis()
+                    val elapsedTime = endTime - startTime
+                    val fps = 1000.0 / elapsedTime
+
+                    Log.d(TAG, "Perform Detection Loop Total $numberOfDetections detections in elapsedTime : $elapsedTime, fps : $fps")
                 }
                 Toast.makeText(baseContext, "ObjectDetection performed!", Toast.LENGTH_SHORT)
                     .show()
@@ -135,11 +146,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun readInputImage(): InputStream {
-        imageid = imageid.xor(1)
+        imageid = Random().nextInt(7)
         return assets.open("test_object_detection_${imageid}.jpg")
     }
 
-    private fun performObjectDetection(ortSession: OrtSession) {
+    private fun performObjectDetection(ortSession: OrtSession, loopIndex: Int = 0){
         val objDetector = ObjectDetector()
         val startTime = System.currentTimeMillis()
         val imageStream = readInputImage()
@@ -157,6 +168,9 @@ class MainActivity : AppCompatActivity() {
         val fps = 1000.0 / elapsedTime
 
         updateUI(result, elapsedTime, fps)
+
+        Log.d(TAG, "Perform Detection Loop Index $loopIndex: Total elapsedTime : $elapsedTime, fps : $fps")
+
     }
 
     companion object {
